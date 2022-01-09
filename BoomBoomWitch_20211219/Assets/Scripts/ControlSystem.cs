@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections.Generic; // 引用系統.集合.一般 (包含List)
+using System.Collections;         // 引用系統.集合
 
 /// <summary>
 /// 控制系統
@@ -17,13 +18,16 @@ public class ControlSystem : MonoBehaviour
     [Header("彈珠預置物")]
     public GameObject goMarbles;
     [Header("發射速度"), Range(0, 5000)]
-    public float speedShoot = 4500;
+    public float speedShoot = 3500;
     [Header("射線要碰撞的圖層")]
     public LayerMask layerToHit;
     [Header("測試滑鼠位置")]
     public Transform traTestMousePosition;
     [Header("所有彈珠")]
     public List<GameObject> listMarbles = new List<GameObject>();
+    [Header("發射間隔")]
+    public float fireInterval = 0.1f;
+
     #endregion
 
     #region 事件
@@ -41,10 +45,13 @@ public class ControlSystem : MonoBehaviour
 
     #region 方法
 
+    /// <summary>
+    /// 生成彈珠存放到清單內
+    /// </summary>
     private void SpawnMarble()
     {
         // 所有彈珠清單.添加(生成彈珠)
-        listMarbles.Add(Instantiate(goMarbles));
+        listMarbles.Add(Instantiate(goMarbles, new Vector3(0, 0, 100), Quaternion.identity));
     }
 
     /// <summary>
@@ -85,10 +92,21 @@ public class ControlSystem : MonoBehaviour
         }
         else if (Input.GetKeyUp(KeyCode.Mouse0))
         {
-            GameObject temp = Instantiate(goMarbles, traSpawnPoint.position, traSpawnPoint.rotation);
-            temp.GetComponent<Rigidbody>().AddForce(traSpawnPoint.forward * speedShoot);
-            goArrow.SetActive(false);
+            StartCoroutine(FireMarble());
         }
+    }
+    private IEnumerator FireMarble()
+    {
+        for (int i = 0; i < listMarbles.Count; i++)
+        {
+            GameObject temp = listMarbles[i];
+            temp.transform.position = traSpawnPoint.position;
+            temp.transform.rotation = traSpawnPoint.rotation;
+            temp.GetComponent<Rigidbody>().velocity = Vector3.zero;                         // 加速度歸零
+            temp.GetComponent<Rigidbody>().AddForce(traSpawnPoint.forward * speedShoot);    // 發射 彈珠
+            yield return new WaitForSeconds(fireInterval);                                  // 間隔
+        }
+        goArrow.SetActive(false);
     }
     #endregion
 
