@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections.Generic; // 引用系統.集合.一般 (包含List)
 
 /// <summary>
 /// 控制系統
@@ -16,14 +17,22 @@ public class ControlSystem : MonoBehaviour
     [Header("彈珠預置物")]
     public GameObject goMarbles;
     [Header("發射速度"), Range(0, 5000)]
-    public float speedShoot = 750;
+    public float speedShoot = 4500;
     [Header("射線要碰撞的圖層")]
     public LayerMask layerToHit;
     [Header("測試滑鼠位置")]
     public Transform traTestMousePosition;
+    [Header("所有彈珠")]
+    public List<GameObject> listMarbles = new List<GameObject>();
     #endregion
 
     #region 事件
+
+    private void Start()
+    {
+        for (int i = 0; i < 2; i++) SpawnMarble();
+    }
+
     private void Update()
     {
         MouseControl();
@@ -31,10 +40,24 @@ public class ControlSystem : MonoBehaviour
     #endregion
 
     #region 方法
-    // 滑鼠控制
+
+    private void SpawnMarble()
+    {
+        // 所有彈珠清單.添加(生成彈珠)
+        listMarbles.Add(Instantiate(goMarbles));
+    }
+
+    /// <summary>
+    /// 滑鼠控制
+    /// </summary>
     private void MouseControl()
     {
-        if (Input.GetKey(KeyCode.Mouse0))
+        if (Input.GetKeyDown(KeyCode.Mouse0))
+        {
+            goArrow.SetActive(true);
+        }
+
+        else if (Input.GetKey(KeyCode.Mouse0))
         {
             Vector3 v3Mouse = Input.mousePosition;
 
@@ -55,7 +78,16 @@ public class ControlSystem : MonoBehaviour
                 Vector3 hitPosition = hit.point;                    // 取得碰撞資訊的座標
                 hitPosition.y = 0.5f;                               // 調整高度軸向
                 traTestMousePosition.position = hitPosition;        // 更新測試物件座標
+
+                // 腳色的 z軸 - 測試物件的座標 - 角色的座標 (向量)
+                transform.forward = traTestMousePosition.position - transform.position; // forward = z 軸
             }
+        }
+        else if (Input.GetKeyUp(KeyCode.Mouse0))
+        {
+            GameObject temp = Instantiate(goMarbles, traSpawnPoint.position, traSpawnPoint.rotation);
+            temp.GetComponent<Rigidbody>().AddForce(traSpawnPoint.forward * speedShoot);
+            goArrow.SetActive(false);
         }
     }
     #endregion
