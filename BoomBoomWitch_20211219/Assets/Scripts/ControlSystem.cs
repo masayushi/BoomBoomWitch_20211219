@@ -28,6 +28,11 @@ public class ControlSystem : MonoBehaviour
     [Header("發射間隔")]
     public float fireInterval = 0.1f;
 
+    /// <summary>
+    /// 所有彈珠數量
+    /// </summary>
+    public static int allMarbles;
+
     #endregion
 
     #region 事件
@@ -50,6 +55,8 @@ public class ControlSystem : MonoBehaviour
     /// </summary>
     private void SpawnMarble()
     {
+        // 彈珠總數增加
+        allMarbles++;
         // 所有彈珠清單.添加(生成彈珠)
         listMarbles.Add(Instantiate(goMarbles, new Vector3(0, 0, 100), Quaternion.identity));
     }
