@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Events;   // 事件
 using System.Collections.Generic;
 
 public class GameManager : MonoBehaviour
@@ -8,6 +9,9 @@ public class GameManager : MonoBehaviour
     /// </summary>
     public Turn turn = Turn.My;
 
+
+    [Header("敵方回合事件")]
+    public UnityEvent onEnemyTurn;
     [Header("怪物陣列")]
     public GameObject[] goEnemys;
     [Header("彈珠")]
@@ -36,7 +40,7 @@ public class GameManager : MonoBehaviour
     /// </summary>
     [SerializeField]
     private List<int> indexColumSecond = new List<int>();
-
+    private ControlSystem controlSystem;
 
 
     private void Awake()
@@ -50,6 +54,8 @@ public class GameManager : MonoBehaviour
         {
             traColumnSecond[i - countRow - 1] = traCheckboards[i];
         }
+
+        controlSystem = FindObjectOfType<ControlSystem>();
 
         SpawnEnemy();
     }
@@ -82,14 +88,31 @@ public class GameManager : MonoBehaviour
             Quaternion.identity);                                                                   // 生成彈珠在棋盤上
     }
 
+    private bool canSpawn = true;
+
     /// <summary>
     /// 切換回合
     /// </summary>
     /// <param name="isMyTurn">是否是玩家回合</param>
     public void SwitchTurn(bool isMyTurn)
     {
-        if (isMyTurn) turn = Turn.My;
-        else turn = Turn.Enemy;
+        if (isMyTurn)
+        {
+            turn = Turn.My;
+            controlSystem.canShoot = true;
+            RecycleMarble.recycleMarbles = 0;       // 回收的數量歸零
+            if (canSpawn)                           // 如果 可以生成
+            {
+                canSpawn = false;                   // 不能生成
+                Invoke("SpawnEnemy", 0.8f);         // 呼叫生成敵人
+            }
+        }
+        else
+        {
+            canSpawn = true;
+            turn = Turn.Enemy;
+            onEnemyTurn.Invoke();
+        }
     }
 
 
